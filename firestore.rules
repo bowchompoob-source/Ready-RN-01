@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default Deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isStudent() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
+    }
+
+    function isTeacher() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'teacher';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Entity Validations
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.email is string && data.email.size() <= 200 &&
+             data.role in ['student', 'teacher'];
+    }
+
+    function isValidQuizAttempt(data) {
+      return data.uid == request.auth.uid &&
+             data.studentId is string && data.studentId.size() <= 50 &&
+             data.studentName is string && data.studentName.size() <= 200 &&
+             data.quizSetId is string && data.quizSetId.size() <= 50 &&
+             data.quizType in ['pre', 'practice', 'post'] &&
+             data.attemptNo is number && data.attemptNo > 0 &&
+             data.scorePercentage is number && data.scorePercentage >= 0 && data.scorePercentage <= 100 &&
+             data.totalQuestions is number && data.totalQuestions >= 0 &&
+             data.correctAnswers is number && data.correctAnswers >= 0;
+    }
+
+    // Collections Rules Match Blocks
+
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow create, update: if isOwner(userId) && isValidUser(request.resource.data);
+    }
+
+    match /students/{studentId} {
+      allow get: if isSignedIn();
+      allow list: if isTeacher();
+      allow create, update: if isSignedIn() && (isTeacher() || request.resource.data.uid == request.auth.uid);
+    }
+
+    match /teachers/{teacherId} {
+      allow get: if isSignedIn();
+      allow create, update: if isTeacher();
+    }
+
+    match /quizSets/{quizSetId} {
+      allow read: if isSignedIn();
+      allow write: if isTeacher();
+    }
+
+    match /questions/{questionId} {
+      allow read: if isSignedIn();
+      allow write: if isTeacher();
+    }
+
+    match /quizAttempts/{attemptId} {
+      allow get: if isSignedIn() && (resource.data.uid == request.auth.uid || isTeacher());
+      // Security Query Enforcer: Lists are only readable for students if they restrict query only to their own UID
+      allow list: if isSignedIn() && (isTeacher() || (resource != null && resource.data.uid == request.auth.uid));
+      allow create: if isSignedIn() && isValidQuizAttempt(request.resource.data);
+      allow update, delete: if isTeacher(); // Prevent students from tampering with historical grades after submission
+    }
+
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isTeacher();
+    }
+  }
+}

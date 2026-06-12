@@ -1,0 +1,11 @@
+# Netlify Configuration File
+# Designed for Ready RN 01 • Single-Page Application (SPA)
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

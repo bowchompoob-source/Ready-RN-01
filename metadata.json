@@ -1,0 +1,6 @@
+{
+  "name": "Ready RN 01",
+  "description": "ระบบทบทวนความรู้วิชา 01 การผดุงครรภ์ เพื่อเตรียมความพร้อมก่อนสอบขึ้นทะเบียนใบประกอบวิชาชีพการพยาบาลและการผดุงครรภ์",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

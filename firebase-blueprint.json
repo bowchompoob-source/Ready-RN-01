@@ -1,0 +1,150 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Defines core user identity and system authorization role",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "teacher"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Student": {
+      "title": "Student Details",
+      "description": "Extended student profile for analytics, class section, and progress summary",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "section": { "type": "string" },
+        "email": { "type": "string" },
+        "status": { "type": "string", "enum": ["excellent", "safe", "risk"] },
+        "preTestScore": { "type": "number" },
+        "postTestScore": { "type": "number" },
+        "practiceCount": { "type": "number" }
+      },
+      "required": ["studentId", "uid", "displayName", "section"]
+    },
+    "Teacher": {
+      "title": "Teacher Details",
+      "description": "Teacher dashboard permissions structure",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "required": ["uid"]
+    },
+    "QuizSet": {
+      "title": "Quiz Set Definition",
+      "description": "Definition of active quiz packages",
+      "type": "object",
+      "properties": {
+        "quizSetId": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string", "enum": ["pre_test", "practice", "post_test"] },
+        "description": { "type": "string" },
+        "totalQuestions": { "type": "number" },
+        "timeLimitMinutes": { "type": "number" },
+        "status": { "type": "string", "enum": ["ready", "not_started"] }
+      },
+      "required": ["quizSetId", "title", "type"]
+    },
+    "Question": {
+      "title": "Question Definition",
+      "description": "A single clinical case study or scenario exam question",
+      "type": "object",
+      "properties": {
+        "questionId": { "type": "string" },
+        "topic": { "type": "string" },
+        "scenario": { "type": "string" },
+        "questionText": { "type": "string" },
+        "options": { "type": "object" },
+        "correctAnswer": { "type": "string", "enum": ["a", "b", "c", "d"] },
+        "explanation": { "type": "string" },
+        "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+        "status": { "type": "string", "enum": ["active", "draft"] }
+      },
+      "required": ["questionId", "topic", "questionText", "correctAnswer"]
+    },
+    "QuizAttempt": {
+      "title": "Quiz Attempt",
+      "description": "A full, detailed and robust snapshot recording of a student's finalized exam",
+      "type": "object",
+      "properties": {
+        "attemptId": { "type": "string" },
+        "uid": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "studentEmail": { "type": "string" },
+        "section": { "type": "string" },
+        "year": { "type": "string" },
+        "quizSetId": { "type": "string" },
+        "quizSetTitle": { "type": "string" },
+        "quizType": { "type": "string", "enum": ["pre", "practice", "post"] },
+        "attemptNo": { "type": "number" },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "totalQuestions": { "type": "number" },
+        "correctAnswers": { "type": "number" },
+        "wrongAnswers": { "type": "number" },
+        "scorePercentage": { "type": "number" },
+        "passingCriteria": { "type": "number" },
+        "topicPassingCriteria": { "type": "number" },
+        "resultStatus": { "type": "string", "enum": ["ผ่านเกณฑ์", "ควรทบทวนเพิ่มเติม"] },
+        "reviewTopics": { "type": "array" },
+        "topicScores": { "type": "array" },
+        "answers": { "type": "array" },
+        "questionSnapshot": { "type": "array" },
+        "revealPolicy": { "type": "string", "enum": ["score_only", "full_reveal"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "AppSettings": {
+      "title": "Application Global Settings",
+      "description": "Settings controlling global threshold criteria",
+      "type": "object",
+      "properties": {
+        "passingCriteria": { "type": "number" },
+        "riskCriteria": { "type": "number" },
+        "questionsPerSet": { "type": "number" },
+        "isOpenRegistration": { "type": "boolean" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "Binds authentication IDs to system authorization roles"
+    },
+    "/students/{studentId}": {
+      "schema": "Student",
+      "description": "Extended student profile data under section/name"
+    },
+    "/teachers/{uid}": {
+      "schema": "Teacher",
+      "description": "Teacher identity listings"
+    },
+    "/quizSets/{quizSetId}": {
+      "schema": "QuizSet",
+      "description": "Listing of active and draft questionnaire sessions"
+    },
+    "/questions/{questionId}": {
+      "schema": "Question",
+      "description": "Obstetric nursing and general midwifery questions data bank"
+    },
+    "/quizAttempts/{attemptId}": {
+      "schema": "QuizAttempt",
+      "description": "History records of finished student attempts"
+    },
+    "/settings/app": {
+      "schema": "AppSettings",
+      "description": "Global settings for scoring calculations and exam capacities"
+    }
+  }
+}
